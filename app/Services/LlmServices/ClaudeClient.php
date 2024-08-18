@@ -2,7 +2,6 @@
 
 namespace App\Services\LlmServices;
 
-use App\Domains\Messages\RoleEnum;
 use App\Services\LlmServices\Functions\FunctionDto;
 use App\Services\LlmServices\Requests\MessageInDto;
 use App\Services\LlmServices\Responses\ClaudeCompletionResponse;
@@ -169,7 +168,8 @@ class ClaudeClient extends BaseClient
         /**
          * Claude needs to not start with a system message
          */
-        $messages = collect($messages)->transform(function ($item) {
+        /** @phpstan-ignore-next-line */
+        $messages = collect($messages)->transform(function (MessageInDto $item) {
             if ($item->role === 'system') {
                 $item->role = 'assistant';
             }

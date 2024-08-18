@@ -163,8 +163,7 @@ test('tool response', function () {
     $this->assertNotNull($content);
 });
 
-
-test("remapMessages", function () {
+test('remapMessages', function () {
     $client = new \App\Services\LlmServices\ClaudeClient;
     $messages = [
         \App\Services\LlmServices\Requests\MessageInDto::from([
@@ -190,7 +189,7 @@ test("remapMessages", function () {
                         'location' => 'SoFi Stadium',
                     ],
                 ],
-            ]
+            ],
         ]),
     ];
 
