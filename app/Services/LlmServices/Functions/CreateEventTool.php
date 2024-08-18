@@ -48,7 +48,7 @@ class CreateEventTool extends FunctionContract
                 'title' => $title,
                 'start_date' => $start_date,
                 'start_time' => $start_time,
-                'location' => $location
+                'location' => $location,
             ],
                 [
                     'description' => $description,
