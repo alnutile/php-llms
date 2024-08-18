@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\LlmServices\Messages\RoleEnum;
 use App\Services\LlmServices\Requests\MessageInDto;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -16,6 +17,27 @@ class Chat extends Model
     public function messages(): HasMany
     {
         return $this->hasMany(Message::class);
+    }
+
+    public function getDriver() : string {
+        return config('llmdriver.driver');
+    }
+
+    public function addInput(
+        string $message,
+        RoleEnum $role,
+        string $tool = '',
+        mixed $tool_id = null,
+        array $args = []): Message
+    {
+        return Message::create([
+            'body' => $message,
+            'chat_id' => $this->id,
+            'role' => $role,
+            'tool_name' => $tool,
+            'tool_id' => $tool_id,
+            'args' => $args,
+        ]);
     }
 
     public function getChatResponse(int $limit = 5): array

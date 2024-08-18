@@ -13,3 +13,22 @@ test('messages in thread', function () {
     expect($chat->messages()->count())->toBe(2);
     expect(count($chat->getChatResponse()))->toBe(2);
 });
+
+
+test('add input', function () {
+    $chat = \App\Models\Chat::factory()->create();
+
+    $message = $chat->addInput(
+        message: 'test',
+        role: \App\Services\LlmServices\Messages\RoleEnum::User,
+        tool: 'test',
+        tool_id: 'test',
+        args: ['test'],
+    );
+
+    expect($message->chat_id)->toBe($chat->id);
+    expect($message->role)->toBe(\App\Services\LlmServices\Messages\RoleEnum::User);
+    expect($message->tool_name)->toBe('test');
+    expect($message->tool_id)->toBe('test');
+    expect($message->args)->toBe(['test']);
+});
