@@ -8,7 +8,6 @@ use Illuminate\Support\Facades\Log;
 
 class CreateEventTool extends FunctionContract
 {
-
     protected string $name = 'create_event_tool';
 
     protected string $description = 'If the user needs to create one or more events this tool help';
@@ -125,5 +124,4 @@ class CreateEventTool extends FunctionContract
             ),
         ];
     }
-
 }

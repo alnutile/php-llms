@@ -11,8 +11,8 @@ use Illuminate\Support\Facades\Log;
 
 class Orchestrate
 {
-
-    public function handle(Chat $chat, string $prompt) : Message {
+    public function handle(Chat $chat, string $prompt): Message
+    {
         $chat->addInput(
             message: $prompt,
             role: RoleEnum::User
@@ -78,7 +78,6 @@ class Orchestrate
 
             return $assistantMessage;
         }
-
 
     }
 }

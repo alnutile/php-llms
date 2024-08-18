@@ -19,7 +19,8 @@ class Chat extends Model
         return $this->hasMany(Message::class);
     }
 
-    public function getDriver() : string {
+    public function getDriver(): string
+    {
         return config('llmdriver.driver');
     }
 

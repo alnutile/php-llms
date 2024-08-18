@@ -7,7 +7,7 @@ test('just chat no tools', function () {
 
     $chat = \App\Models\Chat::factory()->create();
 
-    $results = (new \App\Services\LlmServices\Orchestration\Orchestrate())->handle($chat, 'Hello');
+    $results = (new \App\Services\LlmServices\Orchestration\Orchestrate)->handle($chat, 'Hello');
 
     $this->assertDatabaseCount('messages', 2);
 });

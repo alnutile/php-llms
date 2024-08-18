@@ -14,7 +14,6 @@ test('messages in thread', function () {
     expect(count($chat->getChatResponse()))->toBe(2);
 });
 
-
 test('add input', function () {
     $chat = \App\Models\Chat::factory()->create();
 

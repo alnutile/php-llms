@@ -3,18 +3,14 @@
 namespace App\Services\LlmServices\Functions;
 
 use App\Models\Message;
-use Illuminate\Bus\Batch;
 
 abstract class FunctionContract
 {
     protected string $name;
 
-
     protected string $description;
 
     protected string $type = 'object';
-
-
 
     abstract public function handle(
         Message $message,
