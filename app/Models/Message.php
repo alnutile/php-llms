@@ -19,7 +19,7 @@ class Message extends Model
         'in_out' => 'boolean',
     ];
 
-    public function chat() : BelongsTo
+    public function chat(): BelongsTo
     {
         return $this->belongsTo(Chat::class);
     }

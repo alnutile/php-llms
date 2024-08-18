@@ -15,8 +15,7 @@ class MessageInDto extends Data
         public mixed $tool = '',
         public mixed $tool_id = '',
         public array $args = []
-    ) {
-    }
+    ) {}
 
     public function toArray(): array
     {

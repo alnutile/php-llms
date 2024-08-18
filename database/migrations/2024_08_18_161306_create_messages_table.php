@@ -15,9 +15,9 @@ return new class extends Migration
             $table->id();
             $table->longText('body');
             $table->foreignIdFor(\App\Models\Chat::class);
-            $table->string("tool_name")->nullable();
-            $table->string("tool_id")->nullable();
-            $table->json("args")->nullable();
+            $table->string('tool_name')->nullable();
+            $table->string('tool_id')->nullable();
+            $table->json('args')->nullable();
             $table->string('role')->default(\App\Services\LlmServices\Messages\RoleEnum::User->value);
             $table->timestamps();
         });

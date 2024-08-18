@@ -10,6 +10,5 @@ class FunctionCallDto extends \Spatie\LaravelData\Data
         #[WithCast(ArgumentCaster::class)]
         public array $arguments,
         public string $function_name,
-    ) {
-    }
+    ) {}
 }
