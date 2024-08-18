@@ -2,6 +2,7 @@
 
 namespace App\Services\LlmServices\Functions;
 
+use App\Models\Event;
 use App\Models\Message;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
@@ -47,26 +48,19 @@ class CreateEventTool extends FunctionContract
                 'title' => $title,
                 'start_date' => $start_date,
                 'start_time' => $start_time,
-                'location' => $location,
-                'collection_id' => $message->getChatable()->id,
+                'location' => $location
             ],
                 [
                     'description' => $description,
                     'end_date' => $end_date,
                     'end_time' => $end_time,
-                    'type' => $type,
-                    'assigned_to_id' => null,
-                    'assigned_to_assistant' => $assigned_to_assistant,
                     'all_day' => $all_day,
                 ]);
         }
 
         return FunctionResponse::from([
             'content' => json_encode($eventArray),
-            'prompt' => $message->getContent(),
-            'requires_followup' => false,
-            'documentChunks' => collect([]),
-            'save_to_message' => false,
+            'prompt' => $message->body,
         ]);
     }
 
