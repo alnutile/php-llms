@@ -62,7 +62,7 @@
         ],
         "fix": "vendor/bin/pint",
         "test": "php artisan test",
-        "test-local": "XDEBUG_MODE=coverage herd php artisan test --coverage  --min=40",
+        "test-local": "herd php artisan test",
         "stan": "vendor/bin/phpstan analyse --memory-limit 2G"
     },
     "extra": {

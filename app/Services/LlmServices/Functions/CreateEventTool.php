@@ -25,12 +25,10 @@ class CreateEventTool extends FunctionContract
         foreach ($eventArray as $event) {
             $start_date = null;
             $end_date = null;
-            $assigned_to_assistant = data_get($event, 'assigned_to_assistant', false);
             $description = data_get($event, 'description', null);
             $start_time = data_get($event, 'start_time', null);
             $end_time = data_get($event, 'end_time', null);
             $location = data_get($event, 'location', null);
-            $type = data_get($event, 'type', 'event');
             $title = data_get($event, 'title', 'No Title Found');
             $all_day = data_get($event, 'all_day', false);
 

@@ -52,7 +52,6 @@ class Orchestrate
                 $tool = app()->make($tool_call->name);
                 $results = $tool->handle($message);
                 $message->updateQuietly([
-                    'is_chat_ignored' => true,
                     'role' => RoleEnum::Tool,
                     'body' => $results->content,
                 ]);

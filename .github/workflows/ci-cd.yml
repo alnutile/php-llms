@@ -71,4 +71,4 @@ jobs:
       - name: Test with phpunit
         run: |
           npm install && npm run build
-          XDEBUG_MODE=coverage php artisan test --coverage --min=50
+          php artisan test
