@@ -1,5 +1,5 @@
 # PHP and LLMs
-
+[![CI-CD](https://github.com/alnutile/php-llms/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/alnutile/php-llms/actions/workflows/ci-cd.yml)
 
 ![Cover Image](book/PHP_and_LLMs.png)
 
