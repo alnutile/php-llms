@@ -1,18 +1,13 @@
 <?php
 
 use Illuminate\Support\Facades\Http;
-use LlmLaraHub\LlmDriver\ClaudeClient;
-use LlmLaraHub\LlmDriver\Functions\FunctionDto;
-use LlmLaraHub\LlmDriver\Functions\ParametersDto;
-use LlmLaraHub\LlmDriver\Functions\PropertyDto;
-use LlmLaraHub\LlmDriver\Functions\ToolTypes;
 
 beforeEach(function () {
     Http::preventStrayRequests();
 });
 
 test('completion', function () {
-    $client = new \App\Services\LlmServices\ClaudeClient();
+    $client = new \App\Services\LlmServices\ClaudeClient;
 
     $data = get_fixture('claude_completion.json');
 
@@ -26,7 +21,7 @@ test('completion', function () {
 });
 
 test('chat', function () {
-    $client = new \App\Services\LlmServices\ClaudeClient();
+    $client = new \App\Services\LlmServices\ClaudeClient;
 
     $data = get_fixture('claude_completion.json');
 
@@ -56,8 +51,8 @@ test('chat', function () {
     });
 });
 
-test("assistant messages pattern", function () {
-    $client = new \App\Services\LlmServices\ClaudeClient();
+test('assistant messages pattern', function () {
+    $client = new \App\Services\LlmServices\ClaudeClient;
 
     $data = get_fixture('claude_completion.json');
 
@@ -96,9 +91,8 @@ test("assistant messages pattern", function () {
 
 });
 
-
-test("get functions", function() {
-    $client = new \App\Services\LlmServices\ClaudeClient();
+test('get functions', function () {
+    $client = new \App\Services\LlmServices\ClaudeClient;
     $response = $client->getFunctions();
     $this->assertNotEmpty($response);
     $this->assertIsArray($response);
@@ -110,12 +104,12 @@ test("get functions", function() {
     $this->assertNotEmpty($response);
 });
 
-test("remap functions", function() {
+test('remap functions', function () {
     $shouldBe = get_fixture('claude_remap_functions_results_v2.json');
 
-    $function = (new \App\Services\LlmServices\Functions\CreateEventTool())->getFunction();
+    $function = (new \App\Services\LlmServices\Functions\CreateEventTool)->getFunction();
 
-    $results = (new \App\Services\LlmServices\ClaudeClient())->remapFunctions(collect([$function])->toArray());
+    $results = (new \App\Services\LlmServices\ClaudeClient)->remapFunctions(collect([$function])->toArray());
 
     $this->assertEquals(
         $shouldBe,
@@ -123,7 +117,7 @@ test("remap functions", function() {
     );
 });
 
-test("tool response", function() {
+test('tool response', function () {
     $data = get_fixture('cloud_client_tool_use_response.json');
 
     $data = [
@@ -162,7 +156,7 @@ test("tool response", function() {
         ]),
     ]);
 
-    $results = (new \App\Services\LlmServices\ClaudeClient())->completion('test');
+    $results = (new \App\Services\LlmServices\ClaudeClient)->completion('test');
 
     $content = $results->content;
 

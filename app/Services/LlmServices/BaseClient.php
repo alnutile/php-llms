@@ -9,7 +9,6 @@ use App\Services\LlmServices\Responses\CompletionResponse;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
-use LlmLaraHub\LlmDriver\Functions\ToolTypes;
 
 abstract class BaseClient
 {
@@ -30,7 +29,6 @@ abstract class BaseClient
             return $message->toArray();
         })->toArray();
     }
-
 
     /**
      * @param  MessageInDto[]  $messages
@@ -82,17 +80,17 @@ abstract class BaseClient
     {
         $functions = collect(
             [
-                new CreateEventTool(),
+                new CreateEventTool,
             ]
         );
 
         return $functions->transform(
+            /** @phpstan-ignore-next-line */
             function (FunctionContract $function) {
                 return $function->getFunction();
             }
         )->toArray();
     }
-
 
     public function modifyPayload(array $payload, bool $noTools = false): array
     {

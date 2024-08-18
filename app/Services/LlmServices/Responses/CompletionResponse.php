@@ -2,9 +2,7 @@
 
 namespace App\Services\LlmServices\Responses;
 
-
 use App\Services\LlmServices\Functions\ToolDto;
-use Spatie\LaravelData\Optional;
 
 class CompletionResponse extends \Spatie\LaravelData\Data
 {

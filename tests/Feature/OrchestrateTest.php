@@ -12,8 +12,7 @@ test('just chat no tools', function () {
     $this->assertDatabaseCount('messages', 2);
 });
 
-
-test("runs create tool test", function () {
+test('runs create tool test', function () {
     \App\Services\LlmServices\LlmDriverFacade::shouldReceive('driver->chat')
         ->twice()
         ->andReturn(\App\Services\LlmServices\Responses\CompletionResponse::from(

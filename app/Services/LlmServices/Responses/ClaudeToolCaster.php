@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Services\LlmServices\Responses;
 
 use App\Services\LlmServices\Functions\ToolDto;
@@ -9,10 +10,7 @@ use Spatie\LaravelData\Support\DataProperty;
 
 class ClaudeToolCaster implements Castable
 {
-    public function __construct(public array $tools)
-    {
-
-    }
+    public function __construct(public array $tools) {}
 
     public static function dataCastUsing(...$arguments): Cast
     {

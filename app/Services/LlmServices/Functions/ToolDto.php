@@ -3,7 +3,6 @@
 namespace App\Services\LlmServices\Functions;
 
 use Spatie\LaravelData\Data;
-use Spatie\LaravelData\Optional;
 
 class ToolDto extends Data
 {
@@ -11,6 +10,5 @@ class ToolDto extends Data
         public string $name,
         public array $arguments,
         public string $id = '',
-    ) {
-    }
+    ) {}
 }

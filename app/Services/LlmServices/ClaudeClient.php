@@ -20,7 +20,7 @@ class ClaudeClient extends BaseClient
     protected string $driver = 'claude';
 
     /**
-     * @param MessageInDto[] $messages
+     * @param  MessageInDto[]  $messages
      */
     public function chat(array $messages): CompletionResponse
     {
@@ -54,6 +54,7 @@ class ClaudeClient extends BaseClient
 
         return ClaudeCompletionResponse::from($results->json());
     }
+
     public function completion(string $prompt): CompletionResponse
     {
         Log::info('LlmDriver::Claude::completion using chat');
@@ -89,7 +90,6 @@ class ClaudeClient extends BaseClient
             'content-type' => 'application/json',
         ])->baseUrl($api_url);
     }
-
 
     public function getFunctions(): array
     {

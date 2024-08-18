@@ -9,10 +9,7 @@ use Spatie\LaravelData\Support\DataProperty;
 
 class ClaudeContentCaster implements Castable
 {
-    public function __construct(public array $content)
-    {
-
-    }
+    public function __construct(public array $content) {}
 
     public static function dataCastUsing(...$arguments): Cast
     {

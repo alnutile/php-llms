@@ -5,7 +5,6 @@ namespace App\Services\LlmServices\Responses;
 use App\Services\LlmServices\Functions\ToolDto;
 use Spatie\LaravelData\Attributes\MapInputName;
 use Spatie\LaravelData\Attributes\WithCastable;
-use Spatie\LaravelData\Optional;
 
 class ClaudeCompletionResponse extends CompletionResponse
 {
@@ -17,6 +16,5 @@ class ClaudeCompletionResponse extends CompletionResponse
         #[WithCastable(ClaudeToolCaster::class)]
         #[MapInputName('content')]
         public array $tool_calls = [],
-    ) {
-    }
+    ) {}
 }
