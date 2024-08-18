@@ -21,53 +21,6 @@ if (! function_exists('put_fixture')) {
     }
 }
 
-if (! function_exists('notify_materials_list_ui')) {
-    function notify_materials_list_ui(\App\Models\Note $note, string $message): void
-    {
-        $user = $note->user;
-        \App\Events\MaterialsListEvents::dispatch($note, $user, $message);
-    }
-}
-
-if (! function_exists('notify_materials_list_ui_complete')) {
-    function notify_materials_list_ui_complete(\App\Models\Note $note): void
-    {
-        $user = $note->user;
-        \App\Events\MaterialsListEvents::dispatch($note, $user, 'Complete');
-    }
-}
-
-if (! function_exists('notify_task_ui')) {
-    function notify_task_ui(\App\Models\Note $note, string $message): void
-    {
-        $user = $note->user;
-        \App\Events\TaskEvents::dispatch($note, $user, $message);
-    }
-}
-
-if (! function_exists('notify_task_ui_completed')) {
-    function notify_task_ui_completed(\App\Models\Note $note): void
-    {
-        $user = $note->user;
-        \App\Events\TaskEvents::dispatch($note, $user, 'Complete');
-    }
-}
-
-if (! function_exists('notify_note_ui')) {
-    function notify_note_ui(\App\Models\Note $note, string $message): void
-    {
-        $user = $note->user;
-        \App\Events\NotesEvent::dispatch($note, $user, $message);
-    }
-}
-
-if (! function_exists('remove_ascii')) {
-    function remove_ascii($string): string
-    {
-        return str_replace("\u2019", ' ', preg_replace('/[^\x00-\x7F]+/', '', $string));
-    }
-}
-
 if (! function_exists('get_fixture')) {
     function get_fixture($file_name, $decode = true)
     {

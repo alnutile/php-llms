@@ -91,8 +91,8 @@ class OllamaClient extends BaseClient
             'stream' => false,
         ];
 
-        if($this->format === 'json') {
-            $payload['format'] = "json";
+        if ($this->format === 'json') {
+            $payload['format'] = 'json';
         }
 
         $response = $this->getClient()->post('/generate', $payload);
@@ -121,7 +121,7 @@ class OllamaClient extends BaseClient
     {
         $functions = LlmDriverFacade::getFunctions();
 
-        if (! Feature::activate('ollama-functions')) {
+        if (! Feature::active('ollama-functions')) {
             return [];
         }
 

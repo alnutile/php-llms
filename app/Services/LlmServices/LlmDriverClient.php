@@ -25,13 +25,13 @@ class LlmDriverClient
          */
         switch ($name) {
             case 'openai':
-                return new OpenAiClient();
+                return new OpenAiClient;
             case 'ollama':
-                return new OllamaClient();
+                return new OllamaClient;
             case 'claude':
-                return new ClaudeClient();
+                return new ClaudeClient;
             case 'mock':
-                return new MockClient();
+                return new MockClient;
             default:
                 throw new \InvalidArgumentException("Driver [{$name}] is not supported.");
         }

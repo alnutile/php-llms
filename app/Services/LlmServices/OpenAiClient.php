@@ -125,7 +125,7 @@ class OpenAiClient extends BaseClient
             ],
         ];
 
-        if($this->format === 'json') {
+        if ($this->format === 'json') {
             $config['response_format'] = [
                 'type' => 'json_object',
             ];

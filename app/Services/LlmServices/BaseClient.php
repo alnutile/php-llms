@@ -218,11 +218,7 @@ abstract class BaseClient
     }
 
     /**
-     * @NOTE
-     * Some systems like Claude have to do this
-     * So adding it here as a standar options
-     *
-     * @param  MessageInDto[]  $messagess
+     * @param MessageInDto[] $messages
      */
     protected function remapMessages(array $messages): array
     {
