@@ -1,0 +1,18 @@
+{
+    "id": "msg_012yjf4dWMmm57ikCTibrraL",
+    "type": "message",
+    "role": "assistant",
+    "model": "claude-3-haiku-20240307",
+    "content": [
+        {
+            "type": "text",
+            "text": "{\n \"full_name\": \"John Doe\",\n \"home_address\": \"123 Main Street, Anytown, USA\",\n \"other_name\": null,\n \"reply_to\": null,\n \"valid_user_email\": \"johndoe@example.com\",\n \"phone\": \"555-555-5555\"\n}"
+        }
+    ],
+    "stop_reason": "end_turn",
+    "stop_sequence": null,
+    "usage": {
+        "input_tokens": 507,
+        "output_tokens": 86
+    }
+}
