@@ -19,4 +19,5 @@ Whether you’re looking to automate complex workflows, enhance content verifica
 
 
 ## Learn More 
-[https://leanpub.com/laravel_and_llms](https://leanpub.com/laravel_and_llms)
+
+[LeanPub Books](https://bit.ly/php_llms)
