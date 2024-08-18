@@ -2,6 +2,7 @@
 
 namespace App\Services\LlmServices;
 
+use App\Domains\Messages\RoleEnum;
 use App\Services\LlmServices\Functions\FunctionDto;
 use App\Services\LlmServices\Requests\MessageInDto;
 use App\Services\LlmServices\Responses\ClaudeCompletionResponse;
@@ -10,6 +11,7 @@ use Illuminate\Http\Client\Response;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 class ClaudeClient extends BaseClient
 {
@@ -161,9 +163,13 @@ class ClaudeClient extends BaseClient
      *
      * @param  MessageInDto[]  $messages
      */
-    protected function remapMessages(array $messages, bool $userLast = false): array
+    public function remapMessages(array $messages, bool $userLast = false): array
     {
-        $messages = collect($messages)->map(function ($item) {
+
+        /**
+         * Claude needs to not start with a system message
+         */
+        $messages = collect($messages)->transform(function ($item) {
             if ($item->role === 'system') {
                 $item->role = 'assistant';
             }
@@ -171,16 +177,73 @@ class ClaudeClient extends BaseClient
             $item->content = str($item->content)->replaceEnd("\n", '')->trim()->toString();
 
             return $item->toArray();
-        })
-            ->values();
+        });
 
+        /**
+         * Claude needs me to not use the role tool
+         * but instead set that to role user
+         * and make the content string an array
+         * and other odd stuff.
+         */
+        $updatesToMessages = [];
+
+        $messages->map(function ($item, $key) use (&$updatesToMessages) {
+            if ($item['role'] === \App\Services\LlmServices\Messages\RoleEnum::Tool->value) {
+                $toolId = data_get($item, 'tool_id', 'toolu_'.Str::random(32));
+                $tool = data_get($item, 'tool', 'unknown_tool');
+                $args = data_get($item, 'args', '{}');
+                Log::info('Claude Tool Found', [
+                    'tool' => $tool,
+                    'tool_id' => $toolId,
+                    'args' => $args,
+                ]);
+
+                $content = $item['content'];
+
+                $updatesToMessages[] = [
+                    'role' => 'assistant',
+                    'content' => [
+                        [
+                            'type' => 'text',
+                            'text' => "<thinking>$content</thinking>",
+                        ],
+                        [
+                            'type' => 'tool_use',
+                            'id' => $toolId,
+                            'name' => $tool,
+                            'input' => $args,
+                        ],
+                    ],
+                ];
+
+                $updatesToMessages[] = [
+                    'role' => 'user',
+                    'content' => [
+                        [
+                            'type' => 'tool_result',
+                            'tool_use_id' => $toolId,
+                            'content' => $content,
+                        ],
+                    ],
+                ];
+            } else {
+                $updatesToMessages[] = [
+                    'role' => $item['role'],
+                    'content' => $item['content'],
+                ];
+            }
+
+            return $item;
+        });
+
+        /**
+         * Finally have to make the user assistant sandwich
+         * that Claude seems to require for the api
+         */
         $lastRole = null;
-
         $newMessagesArray = [];
-
-        foreach ($messages as $index => $message) {
+        foreach ($updatesToMessages as $index => $message) {
             $currentRole = data_get($message, 'role');
-
             if ($currentRole === $lastRole) {
                 if ($currentRole === 'assistant') {
                     $newMessagesArray[] = [

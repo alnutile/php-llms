@@ -162,3 +162,42 @@ test('tool response', function () {
 
     $this->assertNotNull($content);
 });
+
+
+test("remapMessages", function () {
+    $client = new \App\Services\LlmServices\ClaudeClient;
+    $messages = [
+        \App\Services\LlmServices\Requests\MessageInDto::from([
+            'content' => 'test',
+            'role' => 'user',
+        ]),
+        \App\Services\LlmServices\Requests\MessageInDto::from([
+            'content' => 'test 1',
+            'role' => 'assistant',
+        ]),
+        \App\Services\LlmServices\Requests\MessageInDto::from([
+            'content' => 'test 3',
+            'role' => 'tool',
+            'tool_id' => 'toolu_019wStJ3pKNRiqhAhbUfpPv8',
+            'tool' => 'create_event_tool',
+            'args' => [
+                'events' => [
+                    [
+                        'title' => 'Cowboys vs Rams',
+                        'description' => 'Preseason Week 1',
+                        'start_time' => '2024-08-11T15:30:00',
+                        'end_time' => '2024-08-11T18:30:00',
+                        'location' => 'SoFi Stadium',
+                    ],
+                ],
+            ]
+        ]),
+    ];
+
+    $results = $client->remapMessages($messages);
+
+    $this->assertEquals(
+        get_fixture('claude_remap_messages.json'),
+        $results
+    );
+});

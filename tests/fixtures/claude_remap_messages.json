@@ -1,0 +1,49 @@
+[
+    {
+        "role": "user",
+        "content": "test"
+    },
+    {
+        "role": "assistant",
+        "content": "test 1"
+    },
+    {
+        "role": "user",
+        "content": "Using the surrounding context to continue this response thread"
+    },
+    {
+        "role": "assistant",
+        "content": [
+            {
+                "type": "text",
+                "text": "<thinking>test 3<\/thinking>"
+            },
+            {
+                "type": "tool_use",
+                "id": "toolu_019wStJ3pKNRiqhAhbUfpPv8",
+                "name": "create_event_tool",
+                "input": {
+                    "events": [
+                        {
+                            "title": "Cowboys vs Rams",
+                            "description": "Preseason Week 1",
+                            "start_time": "2024-08-11T15:30:00",
+                            "end_time": "2024-08-11T18:30:00",
+                            "location": "SoFi Stadium"
+                        }
+                    ]
+                }
+            }
+        ]
+    },
+    {
+        "role": "user",
+        "content": [
+            {
+                "type": "tool_result",
+                "tool_use_id": "toolu_019wStJ3pKNRiqhAhbUfpPv8",
+                "content": "test 3"
+            }
+        ]
+    }
+]

@@ -119,7 +119,7 @@ class OllamaClient extends BaseClient
         return 'ollama';
     }
 
-    protected function remapMessages(array $messages): array
+    public function remapMessages(array $messages): array
     {
         $messages = collect($messages)->map(function ($message) {
             return $message->toArray();
