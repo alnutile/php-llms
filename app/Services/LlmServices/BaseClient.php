@@ -2,11 +2,14 @@
 
 namespace App\Services\LlmServices;
 
+use App\Services\LlmServices\Functions\CreateEventTool;
+use App\Services\LlmServices\Functions\FunctionContract;
 use App\Services\LlmServices\Requests\MessageInDto;
 use App\Services\LlmServices\Responses\CompletionResponse;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
+use LlmLaraHub\LlmDriver\Functions\ToolTypes;
 
 abstract class BaseClient
 {
@@ -28,45 +31,6 @@ abstract class BaseClient
         })->toArray();
     }
 
-    /**
-     * This is to get functions out of the llm
-     * if none are returned your system
-     * can error out or try another way.
-     *
-     * @param  MessageInDto[]  $messages
-     */
-    public function functionPromptChat(array $messages, array $only = []): array
-    {
-        if (! app()->environment('testing')) {
-            sleep(2);
-        }
-
-        Log::info('LlmDriver::MockClient::functionPromptChat', $messages);
-
-        $data = get_fixture('openai_response_with_functions_summarize_collection.json');
-
-        $functions = [];
-
-        foreach (data_get($data, 'choices', []) as $choice) {
-            foreach (data_get($choice, 'message.toolCalls', []) as $tool) {
-                if (data_get($tool, 'type') === 'function') {
-                    $name = data_get($tool, 'function.name', null);
-                    if (! in_array($name, $only)) {
-                        $functions[] = [
-                            'name' => $name,
-                            'arguments' => json_decode(data_get($tool, 'function.arguments', []), true),
-                        ];
-                    }
-                }
-            }
-        }
-
-        /**
-         * @TODO
-         * make this a dto
-         */
-        return $functions;
-    }
 
     /**
      * @param  MessageInDto[]  $messages
@@ -116,41 +80,25 @@ abstract class BaseClient
 
     public function getFunctions(): array
     {
-        $functions = LlmDriverFacade::getFunctions();
+        $functions = collect(
+            [
+                new CreateEventTool(),
+            ]
+        );
 
-        return collect($functions)->map(function ($function) {
-            $function = $function->toArray();
-            $properties = [];
-            $required = [];
-
-            foreach (data_get($function, 'parameters.properties', []) as $property) {
-                $name = data_get($property, 'name');
-
-                if (data_get($property, 'required', false)) {
-                    $required[] = $name;
-                }
-
-                $properties[$name] = [
-                    'description' => data_get($property, 'description', null),
-                    'type' => data_get($property, 'type', 'string'),
-                    'enum' => data_get($property, 'enum', []),
-                    'default' => data_get($property, 'default', null),
-                ];
+        return $functions->transform(
+            function (FunctionContract $function) {
+                return $function->getFunction();
             }
+        )->toArray();
+    }
 
-            return [
-                'type' => 'function',
-                'function' => [
-                    'name' => data_get($function, 'name'),
-                    'description' => data_get($function, 'description'),
-                    'parameters' => [
-                        'type' => 'object',
-                        'properties' => $properties,
-                    ],
-                    'required' => $required,
-                ],
-            ];
-        })->toArray();
+
+    public function modifyPayload(array $payload, bool $noTools = false): array
+    {
+        $payload['tools'] = $this->getFunctions();
+
+        return $payload;
     }
 
     /**

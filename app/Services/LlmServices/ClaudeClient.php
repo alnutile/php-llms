@@ -4,6 +4,7 @@ namespace App\Services\LlmServices;
 
 use App\Services\LlmServices\Functions\FunctionDto;
 use App\Services\LlmServices\Requests\MessageInDto;
+use App\Services\LlmServices\Responses\ClaudeCompletionResponse;
 use App\Services\LlmServices\Responses\CompletionResponse;
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Arr;
@@ -18,27 +19,29 @@ class ClaudeClient extends BaseClient
 
     protected string $driver = 'claude';
 
-    public function completion(string $prompt): CompletionResponse
+    /**
+     * @param MessageInDto[] $messages
+     */
+    public function chat(array $messages): CompletionResponse
     {
         $model = $this->getConfig('claude')['models']['completion_model'];
         $maxTokens = $this->getConfig('claude')['max_tokens'];
 
-        Log::info('LlmDriver::Claude::completion');
+        Log::info('LlmDriver::Claude::chat');
+
+        $messages = $this->remapMessages($messages);
 
         $payload = [
             'model' => $model,
             'max_tokens' => $maxTokens,
-            'messages' => [
-                [
-                    'role' => 'user',
-                    'content' => $prompt,
-                ],
-            ],
+            'messages' => $messages,
         ];
+
+        $payload = $this->modifyPayload($payload);
 
         $results = $this->getClient()->post('/messages', $payload);
 
-        if ($results->failed()) {
+        if (! $results->ok()) {
             $error = $results->json()['error']['type'];
             $message = $results->json()['error']['message'];
             Log::error('Claude API Error Chat', [
@@ -49,10 +52,19 @@ class ClaudeClient extends BaseClient
             throw new \Exception('Claude API Error Chat');
         }
 
-        put_fixture('claude_results.json', $results->json());
+        return ClaudeCompletionResponse::from($results->json());
+    }
+    public function completion(string $prompt): CompletionResponse
+    {
+        Log::info('LlmDriver::Claude::completion using chat');
 
-        return CompletionResponse::from([
-            'content' => $results->json()['content'][0]['text'],
+        $prompt = MessageInDto::from([
+            'content' => $prompt,
+            'role' => 'user',
+        ]);
+
+        return $this->chat([
+            $prompt,
         ]);
     }
 
@@ -78,80 +90,10 @@ class ClaudeClient extends BaseClient
         ])->baseUrl($api_url);
     }
 
-    /**
-     * This is to get functions out of the llm
-     * if none are returned your system
-     * can error out or try another way.
-     *
-     * @param  MessageInDto[]  $messages
-     */
-    public function functionPromptChat(array $messages, array $only = []): array
-    {
 
-        $messages = $this->remapMessages($messages, true);
-
-        /**
-         * @NOTE
-         * The api will not let me end this array in an assistant message
-         * it has to end in a user message
-         */
-        Log::info('LlmDriver::ClaudeClient::functionPromptChat', $messages);
-
-        $model = $this->getConfig('claude')['models']['completion_model'];
-        $maxTokens = $this->getConfig('claude')['max_tokens'];
-
-        $results = $this->getClient()->post('/messages', [
-            'model' => $model,
-            'system' => 'Return a markdown response.',
-            'max_tokens' => $maxTokens,
-            'messages' => $messages,
-            'tools' => $this->getFunctions(),
-        ]);
-
-        $functions = [];
-
-        if (! $results->ok()) {
-            $error = $results->json()['error']['type'];
-            $message = $results->json()['error']['message'];
-
-            Log::error('Claude API Error  getting functions ', [
-                'type' => $error,
-                'message' => $message,
-            ]);
-
-            throw new \Exception('Claude API Error getting functions');
-        }
-
-        $stop_reason = $results->json()['stop_reason'];
-
-        if ($stop_reason === 'tool_use') {
-
-            foreach ($results->json()['content'] as $content) {
-                if (data_get($content, 'type') === 'tool_use') {
-                    $functions[] = [
-                        'name' => data_get($content, 'name'),
-                        'arguments' => data_get($content, 'input'),
-                    ];
-                }
-            }
-        }
-
-        /**
-         * @TODO
-         * make this a dto
-         */
-        return $functions;
-    }
-
-    /**
-     * @NOTE
-     * Since this abstraction layer is based on OpenAi
-     * Not much needs to happen here
-     * but on the others I might need to do XML?
-     */
     public function getFunctions(): array
     {
-        $functions = LlmDriverFacade::getFunctions();
+        $functions = parent::getFunctions();
 
         return $this->remapFunctions($functions);
     }
@@ -162,7 +104,6 @@ class ClaudeClient extends BaseClient
     public function remapFunctions(array $functions): array
     {
         return collect($functions)->map(function ($function) {
-            $function = $function->toArray();
             $properties = [];
             $required = [];
 
@@ -175,25 +116,30 @@ class ClaudeClient extends BaseClient
                     $required[] = $name;
                 }
 
+                $subType = data_get($property, 'type', 'string');
                 $properties[$name] = [
                     'description' => data_get($property, 'description', null),
-                    'type' => data_get($property, 'type', 'string'),
+                    'type' => $subType,
                 ];
+
+                if ($subType === 'array') {
+                    $subItems = $property['properties'][0]->properties; //stop at this for now
+                    $subItemsMapped = [];
+                    foreach ($subItems as $subItemKey => $subItemValue) {
+                        $subItemsMapped[$subItemValue->name] = [
+                            'type' => $subItemValue->type,
+                            'description' => $subItemValue->description,
+                        ];
+                    }
+
+                    $properties[$name]['items'] = [
+                        'type' => 'object',
+                        'properties' => $subItemsMapped,
+                    ];
+                }
             }
 
             $itemsOrProperties = $properties;
-
-            if ($type === 'array') {
-                $itemsOrProperties = [
-                    'results' => [
-                        'type' => 'array',
-                        'items' => [
-                            'type' => 'object',
-                            'properties' => $properties,
-                        ],
-                    ],
-                ];
-            }
 
             return [
                 'name' => data_get($function, 'name'),
@@ -204,7 +150,7 @@ class ClaudeClient extends BaseClient
                     'required' => $required,
                 ],
             ];
-        })->toArray();
+        })->values()->toArray();
     }
 
     /**

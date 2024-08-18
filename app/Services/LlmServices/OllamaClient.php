@@ -14,51 +14,6 @@ class OllamaClient extends BaseClient
     protected string $driver = 'ollama';
 
     /**
-     * This is to get functions out of the llm
-     * if none are returned your system
-     * can error out or try another way.
-     *
-     * @param  MessageInDto[]  $messages
-     */
-    public function functionPromptChat(array $messages, array $only = []): array
-    {
-        Log::info('LlmDriver::OllmaClient::functionPromptChat', $messages);
-
-        $functions = [];
-
-        if (Feature::active('ollama-functions')) {
-            $messages = $this->insertFunctionsIntoMessageArray($messages);
-
-            $response = $this->getClient()->post('/chat', [
-                'model' => $this->getConfig('ollama')['models']['completion_model'],
-                'messages' => $messages,
-                'format' => 'json',
-                'stream' => false,
-            ]);
-
-            $results = $response->json()['message']['content'];
-            $functionsFromResults = json_decode($results, true);
-            $functions = []; //reset this
-            if ($functionsFromResults) {
-                if (
-                    array_key_exists('arguments', $functionsFromResults) &&
-                    array_key_exists('name', $functionsFromResults) &&
-                    data_get($functionsFromResults, 'name') !== 'search_and_summarize') {
-                    $functions[] = $functionsFromResults;
-                }
-            }
-        } else {
-            Log::info('LlmDriver::OllamaClient::functionPromptChat is not active');
-        }
-
-        /**
-         * @TODO
-         * make this a dto
-         */
-        return $functions;
-    }
-
-    /**
      * @param  MessageInDto[]  $messages
      *
      * @throws BindingResolutionException

@@ -143,51 +143,6 @@ class OpenAiClient extends BaseClient
     }
 
     /**
-     * This is to get functions out of the llm
-     * if none are returned your system
-     * can error out or try another way.
-     *
-     * @param  MessageInDto[]  $messages
-     */
-    public function functionPromptChat(array $messages, array $only = []): array
-    {
-
-        Log::info('LlmDriver::OpenAiClient::functionPromptChat', $messages);
-
-        $functions = $this->getFunctions();
-
-        $response = OpenAI::chat()->create([
-            'model' => $this->getConfig('openai')['models']['chat_model'],
-            'messages' => collect($messages)->map(function ($message) {
-                return $message->toArray();
-            })->toArray(),
-            'tool_choice' => 'auto',
-            'tools' => $functions,
-        ]);
-
-        $functions = [];
-        foreach ($response->choices as $result) {
-            foreach (data_get($result, 'message.toolCalls', []) as $tool) {
-                if (data_get($tool, 'type') === 'function') {
-                    $name = data_get($tool, 'function.name', null);
-                    if (! in_array($name, $only)) {
-                        $functions[] = [
-                            'name' => $name,
-                            'arguments' => json_decode(data_get($tool, 'function.arguments', []), true),
-                        ];
-                    }
-                }
-            }
-        }
-
-        /**
-         * @TODO
-         * make this a dto
-         */
-        return $functions;
-    }
-
-    /**
      * @NOTE
      * Since this abstraction layer is based on OpenAi
      * Not much needs to happen here
