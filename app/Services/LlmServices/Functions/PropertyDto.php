@@ -12,6 +12,5 @@ class PropertyDto extends \Spatie\LaravelData\Data
         public array $properties = [],
         public string $default = '',
         public bool $required = false,
-    ) {
-    }
+    ) {}
 }

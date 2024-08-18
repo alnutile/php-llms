@@ -2,13 +2,13 @@
 
 namespace App\Services\LlmServices;
 
+use App\Services\LlmServices\Functions\FunctionDto;
 use App\Services\LlmServices\Requests\MessageInDto;
 use App\Services\LlmServices\Responses\CompletionResponse;
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
-use App\Services\LlmServices\Functions\FunctionDto;
 
 class ClaudeClient extends BaseClient
 {

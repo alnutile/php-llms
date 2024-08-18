@@ -8,6 +8,5 @@ class FunctionDto extends \Spatie\LaravelData\Data
         public string $name,
         public string $description,
         public ParametersDto $parameters,
-    ) {
-    }
+    ) {}
 }
