@@ -8,10 +8,10 @@ use Facades\App\Services\Ollama\Client;
 
 class NewsDigestCompletion
 {
-    public function handle(Carbon $start, Carbon $end) : string
+    public function handle(Carbon $start, Carbon $end): string
     {
         $messages = News::all()->map(function ($news) {
-            return sprintf("News: Title: %s Content: %s", $news->title, $news->body);
+            return sprintf('News: Title: %s Content: %s', $news->title, $news->body);
         })->join("\n");
 
         $prompt = <<<PROMPT
@@ -27,6 +27,6 @@ PROMPT;
 
         $results = Client::completion($messages);
 
-        return data_get($results, 'content', "No Results");
+        return data_get($results, 'content', 'No Results');
     }
 }

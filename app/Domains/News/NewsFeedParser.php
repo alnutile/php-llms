@@ -6,8 +6,7 @@ use Facades\App\Services\Ollama\Client;
 
 class NewsFeedParser
 {
-
-    public function handle(string $context) : bool|string
+    public function handle(string $context): bool|string
     {
         $prompt = <<<PROMPT
 

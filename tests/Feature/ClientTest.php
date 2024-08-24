@@ -16,13 +16,12 @@ test('should return completion response', function () {
     $this->assertNotNull($response);
 });
 
-
 test('should return chat response', function () {
 
     $data = get_fixture('simple_ollama_client_chat_results.json');
 
     \Illuminate\Support\Facades\Http::fake([
-            'localhost:11434/*' => $data]
+        'localhost:11434/*' => $data]
     );
 
     \Illuminate\Support\Facades\Http::preventStrayRequests();
@@ -32,7 +31,7 @@ test('should return chat response', function () {
         [
             'role' => 'user',
             'content' => 'What is PHP?',
-        ]
+        ],
     ]);
 
     $this->assertNotNull($response);

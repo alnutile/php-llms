@@ -6,7 +6,6 @@ use App\Services\LlmServices\Functions\CreateEventTool;
 use App\Services\LlmServices\Functions\FunctionContract;
 use App\Services\LlmServices\Requests\MessageInDto;
 use App\Services\LlmServices\Responses\CompletionResponse;
-use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
@@ -98,7 +97,6 @@ abstract class BaseClient
 
         return $payload;
     }
-
 
     /**
      * @param  MessageInDto[]  $messages

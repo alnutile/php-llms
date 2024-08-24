@@ -18,7 +18,7 @@ class NewsFactory extends Factory
     {
         return [
             'title' => fake()->title,
-            'body' => fake()->sentences(3, true)
+            'body' => fake()->sentences(3, true),
         ];
     }
 }
