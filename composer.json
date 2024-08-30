@@ -17,10 +17,10 @@
         "pusher/pusher-php-server": "*",
         "spatie/laravel-data": "^4.7",
         "symfony/http-client": "^7.1",
+        "fakerphp/faker": "^1.23",
         "tightenco/ziggy": "^2.0"
     },
     "require-dev": {
-        "fakerphp/faker": "^1.23",
         "larastan/larastan": "^2.9",
         "laravel/pint": "^1.13",
         "laravel/sail": "^1.26",
