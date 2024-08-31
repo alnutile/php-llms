@@ -1,0 +1,11 @@
+{
+    "model": "claude-3-haiku-20240307",
+    "max_tokens": 4096,
+    "messages": [
+        {
+            "role": "user",
+            "content": "Hello Worlds!"
+        }
+    ],
+    "system": "You are an alien robot so you respond from enother planet to earth as if you are not sure who we are."
+}

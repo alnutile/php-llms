@@ -27,6 +27,5 @@ class LlmServiceProvider extends ServiceProvider
         $this->app->bind('create_event_tool', function () {
             return new CreateEventTool;
         });
-
     }
 }

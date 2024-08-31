@@ -7,13 +7,18 @@ use App\Services\LlmServices\Functions\FunctionContract;
 use App\Services\LlmServices\Requests\MessageInDto;
 use App\Services\LlmServices\Responses\CompletionResponse;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Str;
 
 abstract class BaseClient
 {
     protected string $driver = 'mock';
 
     protected ?string $format = null;
+
+    protected int $poolSize = 3;
+
+    protected float $temperature = 0.1;
+
+    protected bool $tools = false;
 
     public function setFormat(string $format): self
     {
@@ -22,6 +27,23 @@ abstract class BaseClient
         return $this;
     }
 
+    public function setTools(bool $tools): self
+    {
+        $this->tools = $tools;
+
+        return $this;
+    }
+
+    public function setTemperature(float $temperature): self
+    {
+        $this->temperature = $temperature;
+
+        return $this;
+    }
+
+    /**
+     * @param  MessageInDto[]  $messages
+     */
     protected function messagesToArray(array $messages): array
     {
         return collect($messages)->map(function ($message) {
@@ -40,9 +62,11 @@ abstract class BaseClient
 
         Log::info('LlmDriver::MockClient::completion');
 
-        $data = Str::random(128);
+        $data = fake()->paragraphs(3, true);
 
-        return new CompletionResponse($data);
+        return CompletionResponse::from([
+            'content' => $data,
+        ]);
     }
 
     public function completion(string $prompt): CompletionResponse
@@ -53,11 +77,23 @@ abstract class BaseClient
 
         Log::info('LlmDriver::MockClient::completion');
 
-        $data = get_fixture('real_tasks_pre.json', false);
-
         return CompletionResponse::from([
-            'content' => $data,
+            'content' => fake()->paragraphs(3, true),
         ]);
+    }
+
+    /**
+     * @return CompletionResponse[]
+     *
+     * @throws \Exception
+     */
+    public function completionPool(array $prompts, int $temperature = 0): array
+    {
+        Log::info('LlmDriver::MockClient::completionPool');
+
+        return [
+            $this->completion($prompts[0]),
+        ];
     }
 
     protected function getConfig(string $driver): array
@@ -95,6 +131,14 @@ abstract class BaseClient
     {
         $payload['tools'] = $this->getFunctions();
 
+        if ($this->format === 'json') {
+            $payload['format'] = 'json';
+        }
+
+        $payload['options'] = [
+            'temperature' => $this->temperature,
+        ];
+
         return $payload;
     }
 
@@ -103,6 +147,13 @@ abstract class BaseClient
      */
     public function remapMessages(array $messages): array
     {
+        /** @phpstan-ignore-next-line */
+        $messages = collect($messages)->transform(function (MessageInDto $message): array {
+            return collect($message->toArray())
+                ->only(['content', 'role', 'tool_calls', 'tool_used', 'input_tokens', 'output_tokens', 'model'])
+                ->toArray();
+        })->toArray();
+
         return $messages;
     }
 
@@ -116,5 +167,10 @@ abstract class BaseClient
         $driver = config("llmdriver.drivers.$driver");
 
         return data_get($driver, 'max_tokens', 8192);
+    }
+
+    public function poolSize(): int
+    {
+        return $this->poolSize;
     }
 }

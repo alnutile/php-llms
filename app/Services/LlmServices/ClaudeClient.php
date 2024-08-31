@@ -6,6 +6,7 @@ use App\Services\LlmServices\Functions\FunctionDto;
 use App\Services\LlmServices\Requests\MessageInDto;
 use App\Services\LlmServices\Responses\ClaudeCompletionResponse;
 use App\Services\LlmServices\Responses\CompletionResponse;
+use Illuminate\Http\Client\Pool;
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Http;
@@ -19,6 +20,8 @@ class ClaudeClient extends BaseClient
     protected string $version = '2023-06-01';
 
     protected string $driver = 'claude';
+
+    protected string $system = '';
 
     /**
      * @param  MessageInDto[]  $messages
@@ -99,6 +102,19 @@ class ClaudeClient extends BaseClient
         return $this->remapFunctions($functions);
     }
 
+    public function modifyPayload(array $payload, bool $noTools = false): array
+    {
+        if ($this->tools) {
+            $payload['tools'] = $this->getFunctions();
+        }
+
+        if ($this->system) {
+            $payload['system'] = $this->system;
+        }
+
+        return $payload;
+    }
+
     /**
      * @param  FunctionDto[]  $functions
      */
@@ -107,8 +123,6 @@ class ClaudeClient extends BaseClient
         return collect($functions)->map(function ($function) {
             $properties = [];
             $required = [];
-
-            $type = data_get($function, 'parameters.type', 'object');
 
             foreach (data_get($function, 'parameters.properties', []) as $property) {
                 $name = data_get($property, 'name');
@@ -168,16 +182,20 @@ class ClaudeClient extends BaseClient
         /**
          * Claude needs to not start with a system message
          */
-        /** @phpstan-ignore-next-line */
-        $messages = collect($messages)->transform(function (MessageInDto $item) {
-            if ($item->role === 'system') {
-                $item->role = 'assistant';
-            }
+        $messages = collect($messages)
+            ->filter(function ($item) {
+                if ($item->role === 'system') {
+                    $this->system = $item->content;
+                }
 
-            $item->content = str($item->content)->replaceEnd("\n", '')->trim()->toString();
+                return $item->role !== 'system';
+            })
+            ->transform(function ($item) {
 
-            return $item->toArray();
-        });
+                $item->content = str($item->content)->replaceEnd("\n", '')->trim()->toString();
+
+                return $item->toArray();
+            });
 
         /**
          * Claude needs me to not use the role tool
@@ -278,6 +296,104 @@ class ClaudeClient extends BaseClient
         }
 
         return $newMessagesArray;
+    }
+
+    /**
+     * @return CompletionResponse[]
+     *
+     * @throws \Exception
+     */
+    public function completionPool(array $prompts, int $temperature = 0): array
+    {
+        $api_token = $this->getConfig('claude')['api_key'];
+        $model = $this->getConfig('claude')['models']['completion_model'];
+        $maxTokens = $this->getConfig('claude')['max_tokens'];
+
+        if (is_null($api_token)) {
+            throw new \Exception('Missing Claude api key');
+        }
+
+        $responses = Http::pool(function (Pool $pool) use (
+            $prompts,
+            $api_token,
+            $model,
+            $maxTokens) {
+            foreach ($prompts as $prompt) {
+                $payload = [
+                    'model' => $model,
+                    'max_tokens' => $maxTokens,
+                    'messages' => [
+                        [
+                            'role' => 'user',
+                            'content' => $prompt,
+                        ],
+                    ],
+                ];
+
+                $payload = $this->modifyPayload($payload);
+
+                $pool->retry(3, 6000)->withHeaders([
+                    'x-api-key' => $api_token,
+                    'anthropic-beta' => 'tools-2024-04-04',
+                    'anthropic-version' => $this->version,
+                    'content-type' => 'application/json',
+                ])->baseUrl($this->baseUrl)
+                    ->timeout(240)
+                    ->post('/messages', $payload);
+
+            }
+
+        });
+
+        $results = [];
+
+        foreach ($responses as $index => $response) {
+            if ($response->successful()) {
+                [$data, $tool_used, $stop_reason] = $this->getContentAndToolTypeFromResults($response);
+
+                $results[] = CompletionResponse::from([
+                    'content' => $data,
+                    'tool_used' => $tool_used,
+                    'stop_reason' => $stop_reason,
+                    'input_tokens' => data_get($results, 'usage.input_tokens', null),
+                    'output_tokens' => data_get($results, 'usage.output_tokens', null),
+                ]);
+            } else {
+                Log::error('Claude API Error ', [
+                    'index' => $index,
+                    'error' => $response->body(),
+                ]);
+            }
+        }
+
+        return $results;
+    }
+
+    public function getContentAndToolTypeFromResults(Response $results): array
+    {
+        $data = 'No results found';
+        $results = $results->json();
+        $tool_used = null;
+        $stop_reason = data_get($results, 'stop_reason', 'end_turn');
+
+        if ($stop_reason === 'tool_use') {
+            /**
+             * @TOOD
+             * The tool should be used here to get the
+             * output since it might be different
+             * for each tool
+             */
+            foreach ($results['content'] as $content) {
+                $tool_used = data_get($content, 'name');
+                $data = json_encode(data_get($content, 'input.results', []), JSON_THROW_ON_ERROR);
+            }
+        } else {
+            foreach ($results['content'] as $content) {
+                $data = $content['text'];
+            }
+        }
+
+        return [$data, $tool_used, $stop_reason];
     }
 
     public function onQueue(): string

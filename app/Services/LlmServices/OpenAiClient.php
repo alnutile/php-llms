@@ -5,6 +5,7 @@ namespace App\Services\LlmServices;
 use App\Services\LlmServices\Requests\MessageInDto;
 use App\Services\LlmServices\Responses\CompletionResponse;
 use Illuminate\Http\Client\PendingRequest;
+use Illuminate\Http\Client\Pool;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use OpenAI\Laravel\Facades\OpenAI;
@@ -43,18 +44,64 @@ class OpenAiClient extends BaseClient
         return new CompletionResponse($results);
     }
 
-    protected function getClient(): PendingRequest
+    /**
+     * @return CompletionResponse[]
+     *
+     * @throws \Exception
+     */
+    public function completionPool(array $prompts, int $temperature = 0): array
     {
-        $token = $this->getConfig('openai')['api_key'];
+        Log::info('LlmDriver::OpenAi::completionPool');
+        $baseUrl = $this->baseUrl;
 
-        if (! $token) {
-            throw new \Exception('Missing token');
+        if (! $baseUrl) {
+            throw new \Exception('OpenAi API Base URL or Token not found');
         }
 
-        return Http::withHeaders([
-            'content-type' => 'application/json',
-            'Authorization' => 'Bearer '.$token,
-        ])->withToken($token);
+        $model = $this->getConfig('openai')['models']['completion_model'];
+        $responses = Http::pool(function (Pool $pool) use (
+            $prompts,
+            $model,
+            $baseUrl
+        ) {
+            foreach ($prompts as $prompt) {
+                $payload = [
+                    'model' => $model,
+                    'prompt' => $prompt,
+                    'stream' => false,
+                ];
+
+                $payload = $this->modifyPayload($payload);
+
+                Log::info('OpenAi Request', [
+                    'prompt' => $prompt,
+                    'payload' => $payload,
+                ]);
+
+                $pool->withHeaders([
+                    'content-type' => 'application/json',
+                ])->timeout(300)
+                    ->baseUrl($baseUrl)
+                    ->post('/chat/completions', $payload);
+            }
+        });
+
+        $results = [];
+
+        foreach ($responses as $index => $response) {
+            if ($response->ok()) {
+                $results[] = CompletionResponse::from([
+                    'content' => $response->json()['response'],
+                ]);
+            } else {
+                Log::error('OpenAi API Error ', [
+                    'index' => $index,
+                    'error' => $response->body(),
+                ]);
+            }
+        }
+
+        return $results;
     }
 
     public function vision(string $prompt, string $base64Image, string $type = 'png'): CompletionResponse
@@ -93,8 +140,6 @@ class OpenAiClient extends BaseClient
                 return 60000;
             })
             ->post('/chat/completions', $payload);
-
-        //put_fixture('image_results.json', $response->json());
 
         $results = null;
 
@@ -140,6 +185,20 @@ class OpenAiClient extends BaseClient
         }
 
         return new CompletionResponse($results);
+    }
+
+    protected function getClient(): PendingRequest
+    {
+        $token = $this->getConfig('openai')['api_key'];
+
+        if (! $token) {
+            throw new \Exception('Missing token');
+        }
+
+        return Http::withHeaders([
+            'content-type' => 'application/json',
+            'Authorization' => 'Bearer '.$token,
+        ])->withToken($token);
     }
 
     /**

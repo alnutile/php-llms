@@ -30,6 +30,8 @@ class LlmDriverClient
                 return new OllamaClient;
             case 'claude':
                 return new ClaudeClient;
+            case 'groq':
+                return new GroqClient;
             case 'mock':
                 return new MockClient;
             default:
