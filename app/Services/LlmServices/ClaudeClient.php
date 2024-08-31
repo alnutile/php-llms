@@ -190,8 +190,8 @@ class ClaudeClient extends BaseClient
 
                 return $item->role !== 'system';
             })
-            ->transform(function ($item) {
-
+            /** @phpstan-ignore-next-line */
+            ->transform(function (MessageInDto $item) {
                 $item->content = str($item->content)->replaceEnd("\n", '')->trim()->toString();
 
                 return $item->toArray();
