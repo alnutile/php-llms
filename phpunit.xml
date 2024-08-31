@@ -23,6 +23,7 @@
          <env name="DB_DATABASE" value="testing"/>
         <env name="MAIL_MAILER" value="array"/>
         <env name="PULSE_ENABLED" value="false"/>
+        <env name="GROQ_API_KEY" value="Jvzj2m6ABKuC2o11jUdrT47xqvUt5Fa6RKXSAqkxGkV7hUJnQQpHQCyba4SpED9RUXauz4Zp32Ujwp1MFAKE"/>
         <env name="OPENAI_MOCK" value="true"/>
         <env name="OPENAI_MOCK" value="true"/>
         <env name="QUEUE_CONNECTION" value="sync"/>

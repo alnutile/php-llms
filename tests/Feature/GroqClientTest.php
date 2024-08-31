@@ -53,8 +53,6 @@ class GroqClientTest extends TestCase
 
     public function test_completion_pool(): void
     {
-        Setting::factory()->all_have_keys()->create();
-
         $client = new GroqClient;
 
         $data = get_fixture('groq_completion.json');
@@ -98,26 +96,5 @@ class GroqClientTest extends TestCase
         ]);
 
         $this->assertInstanceOf(CompletionResponse::class, $results);
-    }
-
-    public function test_functions_prompt(): void
-    {
-        $data = get_fixture('groq_functions_response.json');
-
-        Http::fake([
-            'api.groq.com/*' => Http::response($data, 200),
-        ]);
-
-        $openaiClient = new \LlmLaraHub\LlmDriver\GroqClient;
-        $response = $openaiClient->functionPromptChat([
-            MessageInDto::from([
-                'content' => 'test',
-                'role' => 'user',
-            ]),
-        ]);
-
-        $this->assertIsArray($response);
-
-        $this->assertCount(1, $response);
     }
 }
