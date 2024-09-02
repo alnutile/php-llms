@@ -6,12 +6,14 @@
     "license": "MIT",
     "require": {
         "php": "^8.2",
+        "fakerphp/faker": "^1.23",
         "laravel/framework": "^11.9",
         "laravel/horizon": "^5.24",
         "laravel/jetstream": "^5.1",
         "laravel/pennant": "^1.11",
         "laravel/sanctum": "^4.0",
         "laravel/tinker": "^2.9",
+        "league/html-to-markdown": "^5.1",
         "livewire/livewire": "^3.0",
         "openai-php/laravel": "^0.10.1",
         "pusher/pusher-php-server": "*",
@@ -20,7 +22,6 @@
         "tightenco/ziggy": "^2.0"
     },
     "require-dev": {
-        "fakerphp/faker": "^1.23",
         "larastan/larastan": "^2.9",
         "laravel/pint": "^1.13",
         "laravel/sail": "^1.26",

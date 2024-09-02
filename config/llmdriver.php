@@ -47,7 +47,6 @@ return [
             'api_key' => env('GROQ_API_KEY'),
             'max_tokens' => env('GROQ_MAX_TOKENS', 32000),
             'models' => [
-                //@see https://www.anthropic.com/news/claude-3-family
                 'completion_model' => env('GROQ_COMPLETION_MODEL', 'mixtral-8x7b-32768'),
             ],
         ],

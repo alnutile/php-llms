@@ -4,7 +4,7 @@ namespace App\Services\LlmServices;
 
 use App\Services\LlmServices\Requests\MessageInDto;
 use App\Services\LlmServices\Responses\CompletionResponse;
-use Illuminate\Contracts\Container\BindingResolutionException;
+use Illuminate\Http\Client\Pool;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Laravel\Pennant\Feature;
@@ -15,8 +15,6 @@ class OllamaClient extends BaseClient
 
     /**
      * @param  MessageInDto[]  $messages
-     *
-     * @throws BindingResolutionException
      */
     public function chat(array $messages): CompletionResponse
     {
@@ -24,12 +22,15 @@ class OllamaClient extends BaseClient
 
         $messages = $this->remapMessages($messages);
 
-        $response = $this->getClient()->post('/chat', [
+        $payload = [
             'model' => $this->getConfig('ollama')['models']['completion_model'],
             'messages' => $messages,
-            'format' => 'json',
             'stream' => false,
-        ]);
+        ];
+
+        $payload = $this->modifyPayload($payload);
+
+        $response = $this->getClient()->post('/chat', $payload);
 
         $results = $response->json()['message']['content'];
 
@@ -55,6 +56,65 @@ class OllamaClient extends BaseClient
         $results = $response->json()['response'];
 
         return new CompletionResponse($results);
+    }
+
+    /**
+     * @return CompletionResponse[]
+     *
+     * @throws \Exception
+     */
+    public function completionPool(array $prompts, int $temperature = 0): array
+    {
+        Log::info('LlmDriver::Ollama::completionPool');
+        $baseUrl = $this->getConfig('ollama')['api_url'];
+        if (! $baseUrl) {
+            throw new \Exception('Ollama API Base URL or Token not found');
+        }
+
+        $model = $this->getConfig('ollama')['models']['completion_model'];
+        $responses = Http::pool(function (Pool $pool) use (
+            $prompts,
+            $model,
+            $baseUrl
+        ) {
+            foreach ($prompts as $prompt) {
+                $payload = [
+                    'model' => $model,
+                    'prompt' => $prompt,
+                    'stream' => false,
+                ];
+
+                $payload = $this->modifyPayload($payload);
+
+                Log::info('Ollama Request', [
+                    'prompt' => $prompt,
+                    'payload' => $payload,
+                ]);
+
+                $pool->withHeaders([
+                    'content-type' => 'application/json',
+                ])->timeout(300)
+                    ->baseUrl($baseUrl)
+                    ->post('/generate', $payload);
+            }
+        });
+
+        $results = [];
+
+        foreach ($responses as $index => $response) {
+            if ($response->ok()) {
+                $results[] = CompletionResponse::from([
+                    'content' => $response->json()['response'],
+                ]);
+            } else {
+                Log::error('Ollama API Error ', [
+                    'index' => $index,
+                    'error' => $response->body(),
+                ]);
+            }
+        }
+
+        return $results;
     }
 
     protected function getClient()
@@ -117,21 +177,5 @@ class OllamaClient extends BaseClient
     public function onQueue(): string
     {
         return 'ollama';
-    }
-
-    public function remapMessages(array $messages): array
-    {
-        $messages = collect($messages)->map(function ($message) {
-            return $message->toArray();
-        });
-
-        if (in_array('llama3', [
-            $this->getConfig('ollama')['models']['completion_model']])) {
-            Log::info('[LaraChain] LlmDriver::OllamaClient::remapMessages');
-            $messages = collect($messages)->reverse();
-        }
-
-        return $messages->values()->toArray();
-
     }
 }

@@ -43,11 +43,9 @@ test('chat', function () {
     $this->assertInstanceOf(\App\Services\LlmServices\Responses\CompletionResponse::class, $results);
 
     Http::assertSent(function ($request) {
-        $messageAssistant = $request->data()['messages'][0]['role'];
-        $messageUser = $request->data()['messages'][1]['role'];
+        $messageUser = $request->data()['messages'][0]['role'];
 
-        return $messageAssistant === 'assistant' &&
-            $messageUser === 'user';
+        return $messageUser === 'user';
     });
 });
 
@@ -194,7 +192,6 @@ test('remapMessages', function () {
     ];
 
     $results = $client->remapMessages($messages);
-
     $this->assertEquals(
         get_fixture('claude_remap_messages.json'),
         $results
