@@ -6,6 +6,7 @@ use App\Services\LlmServices\Requests\MessageInDto;
 use App\Services\LlmServices\Responses\CompletionResponse;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Http\Client\Pool;
+use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use OpenAI\Laravel\Facades\OpenAI;
@@ -21,27 +22,77 @@ class OpenAiClient extends BaseClient
      */
     public function chat(array $messages): CompletionResponse
     {
+        $token = $this->getConfig('openai')['api_key'];
 
-        $config = [
+        if (is_null($token)) {
+            throw new \Exception('Missing open ai api key');
+        }
+
+        $payload = [
             'model' => $this->getConfig('openai')['models']['chat_model'],
             'messages' => $this->messagesToArray($messages),
         ];
 
-        if ($this->format === 'json') {
-            $config['response_format'] = [
-                'type' => 'json_object',
-            ];
+        $payload = $this->modifyPayload($payload);
+
+        put_fixture('openai_chat_payload.json', $payload);
+
+        $response = Http::withHeaders([
+            'Content-type' => 'application/json',
+        ])
+            ->withToken($token)
+            ->baseUrl($this->baseUrl)
+            ->timeout(240)
+            ->post('/chat/completions', $payload);
+
+        if ($response->failed()) {
+            Log::error('OpenAi API Error ', [
+                'error' => $response->body(),
+            ]);
+
+            throw new \Exception('OpenAi API Error Chat');
         }
 
-        $response = OpenAI::chat()->create($config);
+        put_fixture('openai_chat_response.json', $response->json());
 
-        $results = null;
+        [$data, $tool_used, $stop_reason] = $this->getContentAndToolTypeFromResults($response);
 
-        foreach ($response->choices as $result) {
-            $results = $result->message->content;
+        return CompletionResponse::from([
+            'content' => $data,
+            'tool_used' => $tool_used,
+            'stop_reason' => $stop_reason,
+            'input_tokens' => data_get($response, 'usage.prompt_tokens', null),
+            'output_tokens' => data_get($response, 'usage.completion_tokens', null),
+        ]);
+    }
+
+    public function getContentAndToolTypeFromResults(Response $results): array
+    {
+        $results = $results->json();
+        $tool_used = null;
+        $data = null;
+        $stop_reason = data_get($results, 'choices.0.finish_reason', 'stop');
+        $tool_calls = data_get($results, 'choices.0.message.tool_calls', []);
+
+        if ($stop_reason === 'tool_calls' || ! empty($tool_calls)) {
+            /**
+             * @TOOD
+             * The tool should be used here to get the
+             * output since it might be different
+             * for each tool
+             * Right now it assumes the JSON one is being used
+             */
+            foreach ($results['choices'] as $content) {
+                $tool_used = data_get($content, 'message.tool_calls.0.function.name');
+                $data = json_encode(data_get($content, 'message.tool_calls.0.function.arguments', []), JSON_THROW_ON_ERROR);
+            }
+        } else {
+            foreach (data_get($results, 'choices', []) as $result) {
+                $data = data_get($result, 'message.content', '');
+            }
         }
 
-        return new CompletionResponse($results);
+        return [$data, $tool_used, $stop_reason];
     }
 
     /**
@@ -199,6 +250,24 @@ class OpenAiClient extends BaseClient
             'content-type' => 'application/json',
             'Authorization' => 'Bearer '.$token,
         ])->withToken($token);
+    }
+
+    public function modifyPayload(array $payload, bool $noTools = false): array
+    {
+        $tools = $this->getFunctions();
+        if (! empty($tools)) {
+            $payload['tools'] = $tools;
+        }
+
+        if ($this->format === 'json') {
+            $payload['response_format'] = [
+                'type' => 'json_object',
+            ];
+        }
+
+        $payload['temperature'] = $this->temperature;
+
+        return $payload;
     }
 
     /**
