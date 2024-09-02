@@ -30,12 +30,10 @@ class OpenAiClient extends BaseClient
 
         $payload = [
             'model' => $this->getConfig('openai')['models']['chat_model'],
-            'messages' => $this->messagesToArray($messages),
+            'messages' => $this->remapMessages($messages),
         ];
 
         $payload = $this->modifyPayload($payload);
-
-        put_fixture('openai_chat_payload.json', $payload);
 
         $response = Http::withHeaders([
             'Content-type' => 'application/json',
@@ -52,8 +50,6 @@ class OpenAiClient extends BaseClient
 
             throw new \Exception('OpenAi API Error Chat');
         }
-
-        put_fixture('openai_chat_response.json', $response->json());
 
         [$data, $tool_used, $stop_reason] = $this->getContentAndToolTypeFromResults($response);
 
