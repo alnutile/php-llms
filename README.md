@@ -4,7 +4,7 @@
 ![Cover Image](book/PHP_and_LLMs.png)
 
 See the sample with two complete chapters
-[PHP and LLMs](https://github.com/alnutile/php-llms/blob/main/book/php_and_llms.pdf)
+[PHP and LLMs](https://bit.ly/php_llms_sample)
 
 
 ## About the Book
