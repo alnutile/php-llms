@@ -9,7 +9,7 @@ class TemplatizerTest extends TestCase
 {
     public function test_context()
     {
-        $templatizer = new Templatizer();
+        $templatizer = new Templatizer;
         $context = $templatizer->handle(
             'Hello [CONTEXT]',
             'World!'
@@ -22,7 +22,7 @@ class TemplatizerTest extends TestCase
     {
         $replace = now()->startOfWeek()->format('m/d/Y');
         $replace2 = now()->endOfWeek()->format('M d, Y');
-        $templatizer = new Templatizer();
+        $templatizer = new Templatizer;
         $context = $templatizer->handle(
             'Hello [START_WEEK] to [END_WEEK] [CONTEXT]',
             'World!'
@@ -35,7 +35,7 @@ class TemplatizerTest extends TestCase
 
     public function test_append_context()
     {
-        $templatizer = new Templatizer();
+        $templatizer = new Templatizer;
 
         $context = $templatizer->appendContext(true)
             ->handle(
@@ -55,7 +55,7 @@ class TemplatizerTest extends TestCase
 
     public function test_no_context()
     {
-        $templatizer = new Templatizer();
+        $templatizer = new Templatizer;
         $context = $templatizer->appendContext(true)->handle(
             'Hello [START_WEEK] to [END_WEEK]');
         $this->assertStringContainsString('[CONTEXT]', $context);
@@ -66,7 +66,7 @@ class TemplatizerTest extends TestCase
         $htmlResults = 'text here';
         $somePrompt = 'Some [CONTEXT] here [START_WEEK]';
 
-        $template = new Templatizer();
+        $template = new Templatizer;
         $prompt = $template->appendContext(true)
             ->handle($somePrompt, $htmlResults);
 
@@ -77,7 +77,7 @@ class TemplatizerTest extends TestCase
     {
         $replace = now()->startOfWeek()->format('m/d/Y');
         $replace2 = now()->startOfWeek()->format('M d, Y');
-        $templatizer = new Templatizer();
+        $templatizer = new Templatizer;
         $context = $templatizer->handle(
             'Hello [START_WEEK] to [END_WEEK]',
             'World!'

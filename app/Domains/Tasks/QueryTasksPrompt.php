@@ -4,10 +4,9 @@ namespace App\Domains\Tasks;
 
 class QueryTasksPrompt
 {
-
-    public static function system() : string
+    public static function system(): string
     {
-      $prompt = <<<PROMPT
+        $prompt = <<<'PROMPT'
 <role>
 You are an assistant helping me keep up on all the tasks in the database. You will query the database and return the tasks for me.
 
@@ -34,6 +33,7 @@ user_id: 2 //the assistant user
 user_id: 7 //editor of the book
 
 PROMPT;
+
         return $prompt;
 
     }
