@@ -3,7 +3,6 @@
 use App\Models\Chunk;
 use Pgvector\Vector;
 
-
 test('model chunks', function () {
     $model = Chunk::factory()->create();
     expect($model->content)->not->toBeNull();

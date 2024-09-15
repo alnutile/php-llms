@@ -30,7 +30,7 @@ class ChunkFactory extends Factory
             'embedding_1536' => null,
             'embedding_2048' => null,
             'embedding_4096' => null,
-            "document_id" => Document::factory(),
+            'document_id' => Document::factory(),
         ];
     }
 }
