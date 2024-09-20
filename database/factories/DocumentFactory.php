@@ -17,6 +17,7 @@ class DocumentFactory extends Factory
     public function definition(): array
     {
         return [
+            'title' => fake()->sentence(),
             'summary' => fake()->paragraph(),
             'content' => fake()->paragraph(),
         ];

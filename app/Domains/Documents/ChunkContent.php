@@ -9,9 +9,10 @@ use Illuminate\Support\Facades\Http;
 
 class ChunkContent
 {
-    public function handle(string $content): Document
+    public function handle(string $content, ?string $title = null): Document
     {
-        $document = new Document();
+        $document = new Document;
+        $document->title = $title;
         $document->content = $content;
         $document->save();
 

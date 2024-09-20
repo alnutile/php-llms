@@ -4,6 +4,7 @@ use App\Models\Chunk;
 use Pgvector\Vector;
 
 test('model chunks', function () {
+    $this->withoutExceptionHandling();
     $model = Chunk::factory()->create();
     expect($model->content)->not->toBeNull();
     expect($model->sort_order)->not->toBeNull();
