@@ -15,6 +15,7 @@ class Chunk extends Model
     protected $guarded = [];
 
     protected $casts = [
+        'embedding_768' => Vector::class,
         'embedding_3072' => Vector::class,
         'embedding_1536' => Vector::class,
         'embedding_2048' => Vector::class,

@@ -20,11 +20,8 @@ class ChunkFactory extends Factory
         $embeddings = get_fixture('embedding_response.json');
 
         return [
-            'guid' => fake()->uuid(),
             'content' => fake()->sentence(10),
             'sort_order' => fake()->numberBetween(1, 100),
-            'section_number' => fake()->numberBetween(1, 100),
-            'original_content' => fake()->sentence(10),
             'summary' => fake()->sentence(5),
             'embedding_3072' => data_get($embeddings, 'data.0.embedding'),
             'embedding_1536' => null,
