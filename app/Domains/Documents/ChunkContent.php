@@ -27,12 +27,13 @@ class ChunkContent
                 'input' => $chunk,
             ])->json();
 
+            $embedding = data_get($embedding, 'embeddings.0');
             Chunk::create(
                 [
                     'content' => $chunk,
                     'document_id' => $document->id,
                     'sort_order' => $chunkSection,
-                    'embedding_768' => $embedding['embeddings'][0],
+                    'embedding_768' => $embedding,
                 ]
             );
         }
