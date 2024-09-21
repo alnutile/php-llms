@@ -62,6 +62,65 @@ class OpenAiClient extends BaseClient
         ]);
     }
 
+    public function image(
+        string $prompt,
+        string $base64Image
+    ): CompletionResponse {
+        $token = $this->getConfig('openai')['api_key'];
+
+        if (is_null($token)) {
+            throw new \Exception('Missing open ai api key');
+        }
+
+        $payload = [
+            'model' => $this->getConfig('openai')['models']['chat_model'],
+            'messages' => [
+                [
+                    'role' => 'user',
+                    'content' => [
+                        [
+                            'type' => 'text',
+                            'text' => $prompt,
+                        ],
+                        [
+                            'type' => 'image_url',
+                            'image_url' => [
+                                'url' => 'data:image/jpeg;base64,'.$base64Image,
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+            'max_tokens' => 300,
+        ];
+
+        $response = Http::withHeaders([
+            'Content-type' => 'application/json',
+        ])
+            ->withToken($token)
+            ->baseUrl($this->baseUrl)
+            ->timeout(240)
+            ->post('/chat/completions', $payload);
+
+        if ($response->failed()) {
+            Log::error('OpenAi API Error ', [
+                'error' => $response->body(),
+            ]);
+
+            throw new \Exception('OpenAi API Error Chat');
+        }
+
+        [$data, $tool_used, $stop_reason] = $this->getContentAndToolTypeFromResults($response);
+
+        return CompletionResponse::from([
+            'content' => $data,
+            'tool_used' => $tool_used,
+            'stop_reason' => $stop_reason,
+            'input_tokens' => data_get($response, 'usage.prompt_tokens', null),
+            'output_tokens' => data_get($response, 'usage.completion_tokens', null),
+        ]);
+    }
+
     public function getContentAndToolTypeFromResults(Response $results): array
     {
         $results = $results->json();

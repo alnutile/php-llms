@@ -69,6 +69,23 @@ abstract class BaseClient
         ]);
     }
 
+    public function image(
+        string $prompt,
+        string $base64Image): CompletionResponse
+    {
+        if (! app()->environment('testing')) {
+            sleep(2);
+        }
+
+        Log::info('LlmDriver::MockClient::completion');
+
+        $data = fake()->paragraphs(3, true);
+
+        return CompletionResponse::from([
+            'content' => $data,
+        ]);
+    }
+
     public function completion(string $prompt): CompletionResponse
     {
         if (! app()->environment('testing')) {
